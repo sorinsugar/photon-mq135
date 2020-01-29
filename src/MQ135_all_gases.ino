@@ -14,27 +14,32 @@
 //
 // Original creator of this library: https://github.com/GeorgK/MQ135
 
-#define PIN_MQ135 A2
-MQ135AG mq135_sensor(PIN_MQ135);
+#define ANALOG_PIN A2
+#define DIGITAL_PIN D2
 
 #define RESISTANCE_LOOP 50
 #define RESISTANCE_DELAY 5000
 
-char publishString [50];
+MQ135AG mq135_sensor(ANALOG_PIN);
+
+char publishString[50];
 float temperature = 20.0; // assume current temperature. Recommended to measure with DHT22
 float humidity = 55.0; // assume current humidity. Recommended to measure with DHT22
 
+void get_sensor_pin_reads() {
+    float analogData = analogRead(ANALOG_PIN);
+    float digitalData = digitalRead(DIGITAL_PIN);
+    Particle.publish("Analog pin", String::format("%f", analogData));
+    Particle.publish("Digital pin", String::format("%f", digitalData));
+}
 
 // Get resistance and corrected resistance from sensor
 void get_resistance() {
-    float analogData = analogRead(PIN_MQ135);
     float resistance = mq135_sensor.getResistance();
     float correctedResistance = mq135_sensor.getCorrectedResistance(temperature, humidity);
 
-    Particle.publish("Analog data", String::format("%f", analogData));
     Particle.publish("Resistance", String::format("%f", resistance));
     Particle.publish("Corrected resistance", String::format("%f", correctedResistance));
-    delay(5000);
 }
 
 // This should be done in a 24 hour time.
@@ -61,12 +66,12 @@ void get_average_R0(int loop = 100) {
 
     // If max loop reached, calculate average values.
     if (i == loop) {
-        float R0CO = loopR0CO/100;
-        float R0CO2 = loopR0CO2/100;
-        float R0Ethanol = loopR0Ethanol/100;
-        float R0NH4 = loopR0NH4/100;
-        float R0Toluene = loopR0Toluene/100;
-        float R0Acetone = loopR0Acetone/100;
+        float R0CO = loopR0CO / 100;
+        float R0CO2 = loopR0CO2 / 100;
+        float R0Ethanol = loopR0Ethanol / 100;
+        float R0NH4 = loopR0NH4 / 100;
+        float R0Toluene = loopR0Toluene / 100;
+        float R0Acetone = loopR0Acetone / 100;
 
         Particle.publish("R0CO", String::format("%f", R0CO));
         Particle.publish("R0CO2", String::format("%f", R0CO2));
@@ -93,7 +98,6 @@ void get_ppm() {
     Particle.publish("NH4 ppm:", String::format("%f", NH4));
     Particle.publish("Toluene ppm:", String::format("%f", Toluene));
     Particle.publish("Acetone ppm:", String::format("%f", Acetone));
-    delay(5000);
 }
 
 // Get calibrated PPM values based on temperature and humidity
@@ -111,7 +115,6 @@ void get_calibrated_ppm() {
     Particle.publish("Calibrated NH4 ppm:", String::format("%f", calibratedNH4));
     Particle.publish("Calibrated Toluene ppm:", String::format("%f", calibratedToluene));
     Particle.publish("Calibrated Acetone ppm:", String::format("%f", calibratedAcetone));
-    delay(5000);
 }
 
 void setup() {
@@ -120,8 +123,10 @@ void setup() {
 }
 
 void loop() {
-    get_resistance();
-    // get_average_R0(10);
-    // get_ppm();
-    // get_calibrated_ppm();
+    get_sensor_pin_reads();
+//    get_resistance();
+//    get_average_R0(10);
+//    get_ppm();
+//    get_calibrated_ppm();
+    delay(5000);
 }
